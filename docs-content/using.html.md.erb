@@ -139,27 +139,34 @@ see [Managing Service Instances with the cf CLI](https://docs.pivotal.io/pivotal
 
 ### <a id="remote"></a> Connect an ECS Service to a Remote PCF Instance
 
-There are cases in which a single logical app is spread across multiple PCF instances. Often in these cases there is a desire to share data between these app instances.
+There are cases in which a single logical app is spread across multiple PCF instances.
+Often in these cases there is a desire to share data between these app instances.
 
 In the past, doing so required the developer to create "user provided services", but doing this is less than ideal, since the process is complex and PCF has no way to know when it is safe to delete a bucket bound via a user-provided service.
 
 The ECS service broker supports the ability to create a "remote connection" to an existing bucket, which allows developers to take advantage of the strongly-consistent geo-distribution features of ECS, and retain the PCF experience.
 
-Having created a bucket named `my_bucket` previously, you cannot connect to that bucket on another PCF instance. First on the original PCF instance, create a "remote connection" service key by running the following command:
+Having created a 5gb bucket named `my-bucket` previously, you cannot connect to that bucket on another PCF instance.
+First on the original PCF instance, create a "remote connection" service key by running the following command:
 
 <pre class="terminal">
-$ cf create-service-key my-bucket pcf2 -c '{"connect_remote": true}'
-
+$ cf create-service-key my-bucket my-key -c '{"remote_connection": true}'
 </pre>
 
 View the service key information created by running the following command:
 
 <pre class="terminal">
-$ cf service-key my-bucket pcf2
+$ cf service-key my-bucket my-key
+Getting key pcf2Key for service instance mybucket as user...
+{
+  "accessKey": "...",
+  "instanceId": "...",
+  "secretKey": "..."
+}
 </pre>
 
-Next on the _alternate_ PCF instance, create an service instance of the same bucket connecting remotely to the existing one:
+Next on the _alternate_ PCF instance, create an identical service instance of the same bucket connecting remotely to the existing one:
 
 <pre class="terminal">
-$ cf create-service ecs-bucket 5gb my-bucket -c '{"remote_connection": {""}}'
+$ cf create-service mybucket 5gb mybucket -c '{"remote_connection": {"accessKey": "...", "instanceId": "...", "secretKey": "..."}}'
 </pre>
